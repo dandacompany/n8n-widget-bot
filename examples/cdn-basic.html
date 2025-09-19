@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n Widget Bot - Basic CDN Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        .feature-list {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            text-align: left;
+            margin: 40px 0;
+        }
+        .feature-list h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .feature-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>n8n Widget Bot</h1>
+        <p>Basic CDN Integration Example</p>
+        
+        <div class="feature-list">
+            <h2>✨ Features Demo</h2>
+            <ul>
+                <li>🚀 Zero dependencies - Pure vanilla JavaScript</li>
+                <li>🎨 Fully customizable theme and colors</li>
+                <li>📱 Responsive design for all devices</li>
+                <li>🔄 Resizable chat window</li>
+                <li>✨ Smooth typing animations</li>
+                <li>💬 Click the chat bubble in the bottom-right corner to start!</li>
+            </ul>
+        </div>
+
+        <div class="code-block">
+            <pre>// This widget is loaded via CDN
+FloatingChatWidget.init({
+    apiUrl: 'YOUR_N8N_WEBHOOK_URL',
+    title: 'AI Assistant',
+    themeColor: '#4C4CBB',
+    welcomeMessage: 'Hello! How can I help?'
+});</pre>
+        </div>
+
+        <p>💡 Replace YOUR_N8N_WEBHOOK_URL with your actual n8n webhook endpoint</p>
+    </div>
+
+    <!-- Load n8n Widget Bot from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/n8n-widget-bot@latest/dist/n8n-widget-bot.min.js"></script>
+    
+    <!-- Initialize the widget -->
+    <script>
+        // Initialize with demo configuration
+        FloatingChatWidget.init({
+            apiUrl: 'https://your-n8n-instance.com/webhook/chat', // Replace with your n8n webhook URL
+            title: '🤖 AI Assistant',
+            themeColor: '#4C4CBB',
+            welcomeMessage: 'Hello! 👋 This is a demo of n8n Widget Bot loaded from CDN. How can I help you today?',
+            placeholder: 'Type your message...',
+            position: 'bottom-right',
+            width: 380,
+            height: 550,
+            resizable: true,
+            debug: true // Enable debug mode to see console logs
+        });
+
+        // Example: Programmatic control
+        // You can control the widget programmatically
+        console.log('n8n Widget Bot initialized from CDN!');
+        
+        // Optional: Handle messages programmatically
+        FloatingChatWidget.onUserRequest(function(message) {
+            console.log('User message:', message);
+            
+            // For demo purposes, show a message if no API is configured
+            if (message.toLowerCase().includes('demo')) {
+                FloatingChatWidget.reply('This is a demo response! Connect your n8n webhook to enable AI responses.');
+            }
+        });
+    </script>
+</body>
+</html>

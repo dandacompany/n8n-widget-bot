@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n Widget Bot - Advanced CDN Example</title>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .controls {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .controls h2 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .control-item label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        .control-item input,
+        .control-item select,
+        .control-item textarea {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .control-item input[type="color"] {
+            height: 40px;
+            cursor: pointer;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h3 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        
+        .info-box code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .demo-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .demo-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .message-log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .message-log .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .message-log .log-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .message-log .timestamp {
+            color: #6c757d;
+            margin-right: 10px;
+        }
+        
+        .message-log .user {
+            color: #007bff;
+        }
+        
+        .message-log .bot {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>n8n Widget Bot - Advanced Example</h1>
+        <p>Full control over your chatbot widget with programmatic API</p>
+    </div>
+
+    <div class="container">
+        <div class="info-box">
+            <h3>📌 About This Demo</h3>
+            <p>This example demonstrates advanced usage of the n8n Widget Bot loaded from CDN. 
+            You can dynamically control all aspects of the widget, send custom messages, 
+            and handle user interactions programmatically.</p>
+        </div>
+
+        <div class="controls">
+            <h2>⚙️ Widget Configuration</h2>
+            
+            <div class="control-group">
+                <div class="control-item">
+                    <label for="apiUrl">API URL:</label>
+                    <input type="text" id="apiUrl" placeholder="https://your-n8n.com/webhook/chat" />
+                </div>
+                
+                <div class="control-item">
+                    <label for="themeColor">Theme Color:</label>
+                    <input type="color" id="themeColor" value="#4C4CBB" />
+                </div>
+                
+                <div class="control-item">
+                    <label for="position">Position:</label>
+                    <select id="position">
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                    </select>
+                </div>
+                
+                <div class="control-item">
+                    <label for="title">Widget Title:</label>
+                    <input type="text" id="title" value="AI Assistant" />
+                </div>
+                
+                <div class="control-item">
+                    <label for="welcomeMessage">Welcome Message:</label>
+                    <textarea id="welcomeMessage" rows="2">Hello! 👋 How can I help you today?</textarea>
+                </div>
+                
+                <div class="control-item">
+                    <label for="width">Width (px):</label>
+                    <input type="number" id="width" value="380" min="300" max="600" />
+                </div>
+                
+                <div class="control-item">
+                    <label for="height">Height (px):</label>
+                    <input type="number" id="height" value="550" min="400" max="800" />
+                </div>
+                
+                <div class="control-item">
+                    <label for="resizable">Resizable:</label>
+                    <select id="resizable">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="initializeWidget()">
+                    <i class="fas fa-rocket"></i> Initialize Widget
+                </button>
+                <button class="btn btn-danger" onclick="location.reload()">
+                    <i class="fas fa-redo"></i> Reset Page
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>🎮 Widget Controls</h3>
+            
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="openWidget()">
+                    <i class="fas fa-comment"></i> Open Widget
+                </button>
+                <button class="btn btn-secondary" onclick="closeWidget()">
+                    <i class="fas fa-times"></i> Close Widget
+                </button>
+                <button class="btn btn-info" onclick="toggleWidget()">
+                    <i class="fas fa-exchange-alt"></i> Toggle Widget
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>💬 Send Custom Messages</h3>
+            
+            <div class="control-group">
+                <div class="control-item" style="flex: 1;">
+                    <label for="customMessage">Custom Bot Message:</label>
+                    <input type="text" id="customMessage" placeholder="Enter a message to send as bot..." />
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="sendCustomMessage()">
+                    <i class="fas fa-paper-plane"></i> Send as Bot
+                </button>
+                <button class="btn btn-info" onclick="sendWelcomeSequence()">
+                    <i class="fas fa-hand-peace"></i> Send Welcome Sequence
+                </button>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h3>📊 Message Log</h3>
+            <div class="message-log" id="messageLog">
+                <div class="log-entry">
+                    <span class="timestamp">[00:00:00]</span>
+                    <span class="system">System: Waiting for widget initialization...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load n8n Widget Bot from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/n8n-widget-bot@latest/dist/n8n-widget-bot.min.js"></script>
+    
+    <!-- Advanced Demo Script -->
+    <script>
+        let widgetInitialized = false;
+
+        // Log message to the message log
+        function logMessage(message, type = 'system') {
+            const log = document.getElementById('messageLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>
+                <span class="${type}">${type.charAt(0).toUpperCase() + type.slice(1)}: ${message}</span>
+            `;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Initialize the widget with configuration from form
+        function initializeWidget() {
+            if (widgetInitialized) {
+                alert('Widget is already initialized! Refresh the page to reinitialize.');
+                return;
+            }
+
+            const config = {
+                apiUrl: document.getElementById('apiUrl').value || 'https://demo-n8n.com/webhook/chat',
+                themeColor: document.getElementById('themeColor').value,
+                position: document.getElementById('position').value,
+                title: document.getElementById('title').value,
+                welcomeMessage: document.getElementById('welcomeMessage').value,
+                width: parseInt(document.getElementById('width').value),
+                height: parseInt(document.getElementById('height').value),
+                resizable: document.getElementById('resizable').value === 'true',
+                placeholder: 'Type your message...',
+                debug: true,
+                typingSpeed: 15,
+                animationDuration: 300
+            };
+
+            // Initialize the widget
+            FloatingChatWidget.init(config);
+            
+            // Set up message handler
+            FloatingChatWidget.onUserRequest(function(message) {
+                logMessage(message, 'user');
+                
+                // Demo: Auto-reply for certain keywords
+                if (message.toLowerCase().includes('hello')) {
+                    setTimeout(() => {
+                        FloatingChatWidget.reply('Hello there! This is an automated demo response. Connect your n8n webhook for real AI responses!');
+                        logMessage('Sent auto-reply for greeting', 'bot');
+                    }, 1000);
+                } else if (message.toLowerCase().includes('help')) {
+                    setTimeout(() => {
+                        FloatingChatWidget.reply('I can help you with: \n- Product information\n- Technical support\n- General inquiries\n\nWhat would you like to know?');
+                        logMessage('Sent help menu', 'bot');
+                    }, 1000);
+                }
+            });
+
+            widgetInitialized = true;
+            logMessage('Widget initialized successfully!', 'system');
+            
+            // Auto-open widget after initialization
+            setTimeout(() => {
+                FloatingChatWidget.open();
+                logMessage('Widget opened automatically', 'system');
+            }, 500);
+        }
+
+        // Widget control functions
+        function openWidget() {
+            if (!widgetInitialized) {
+                alert('Please initialize the widget first!');
+                return;
+            }
+            FloatingChatWidget.open();
+            logMessage('Widget opened', 'system');
+        }
+
+        function closeWidget() {
+            if (!widgetInitialized) {
+                alert('Please initialize the widget first!');
+                return;
+            }
+            FloatingChatWidget.close();
+            logMessage('Widget closed', 'system');
+        }
+
+        function toggleWidget() {
+            if (!widgetInitialized) {
+                alert('Please initialize the widget first!');
+                return;
+            }
+            FloatingChatWidget.toggle();
+            logMessage('Widget toggled', 'system');
+        }
+
+        // Send custom message
+        function sendCustomMessage() {
+            if (!widgetInitialized) {
+                alert('Please initialize the widget first!');
+                return;
+            }
+            
+            const message = document.getElementById('customMessage').value;
+            if (!message) {
+                alert('Please enter a message!');
+                return;
+            }
+            
+            FloatingChatWidget.reply(message);
+            logMessage(message, 'bot');
+            document.getElementById('customMessage').value = '';
+        }
+
+        // Send welcome sequence
+        function sendWelcomeSequence() {
+            if (!widgetInitialized) {
+                alert('Please initialize the widget first!');
+                return;
+            }
+            
+            const messages = [
+                'Welcome to our advanced demo! 👋',
+                'I can demonstrate various features...',
+                '✨ Smooth typing animations',
+                '🎨 Custom theming',
+                '📱 Responsive design',
+                '🔄 And much more!'
+            ];
+            
+            FloatingChatWidget.open();
+            
+            messages.forEach((msg, index) => {
+                setTimeout(() => {
+                    FloatingChatWidget.reply(msg);
+                    logMessage(msg, 'bot');
+                }, (index + 1) * 2000);
+            });
+        }
+
+        // Initialize with default config on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            logMessage('Page loaded. Configure and initialize the widget above.', 'system');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "name": "n8n-widget-bot",
+  "version": "1.0.0",
+  "description": "Lightweight and customizable n8n AI chatbot widget",
+  "main": "dist/n8n-widget-bot.js",
+  "unpkg": "dist/n8n-widget-bot.min.js",
+  "jsdelivr": "dist/n8n-widget-bot.min.js",
+  "scripts": {
+    "build": "npm run build:clean && npm run build:copy && npm run build:minify",
+    "build:clean": "rm -rf dist && mkdir -p dist",
+    "build:copy": "cp n8n-widget-bot.js dist/",
+    "build:minify": "terser n8n-widget-bot.js -c -m -o dist/n8n-widget-bot.min.js --comments false",
+    "dev": "python3 -m http.server 8000",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "n8n",
+    "chatbot",
+    "widget",
+    "ai",
+    "chat",
+    "floating-widget",
+    "webhook",
+    "no-dependencies",
+    "vanilla-js",
+    "cdn"
+  ],
+  "author": "Dante Labs <contact@dantelabs.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/dantelabs/n8n-widget-bot#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dantelabs/n8n-widget-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dantelabs/n8n-widget-bot/issues"
+  },
+  "files": [
+    "dist/",
+    "n8n-widget-bot.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "terser": "^5.44.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
