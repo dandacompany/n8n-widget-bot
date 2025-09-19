@@ -47,15 +47,6 @@
     maxHeight: 800, // Maximum height
   };
 
-  /**
-   * Logging utility function
-   * @param {...any} args - Arguments to log
-   */
-  function log(...args) {
-    if (FloatingChatWidget._config && FloatingChatWidget._config.debug) {
-      console.log('[FloatingChatWidget]', ...args);
-    }
-  }
 
   /**
    * Utility functions
@@ -436,7 +427,6 @@
         messagesContainer.appendChild(messageElement);
         this.scrollToBottom(messagesContainer);
         this.streamTextToBubble(bubbleElement, text);
-        log('Streaming message added:', sender, text);
         return;
       } else {
         bubbleElement.innerHTML = Utils.formatMarkdown(text);
@@ -445,7 +435,6 @@
       messageElement.appendChild(bubbleElement);
       messagesContainer.appendChild(messageElement);
       this.scrollToBottom(messagesContainer);
-      log('Message added:', sender, text);
     },
 
     /**
@@ -589,16 +578,6 @@
 
       document.body.style.cursor = this.getCursorForDirection(direction);
       document.body.style.userSelect = 'none';
-      
-      log('Resize started:', { 
-        direction,
-        width: this.startWidth, 
-        height: this.startHeight,
-        left: this.startLeft,
-        right: this.startRight,
-        top: this.startTop,
-        bottom: this.startBottom
-      });
     },
 
     /**
@@ -671,14 +650,6 @@
       } else {
         widget.style.left = newLeft + 'px';
       }
-
-      log('Resizing:', { 
-        direction: this.resizeDirection,
-        width: newWidth, 
-        height: newHeight, 
-        deltaX, 
-        deltaY 
-      });
     },
 
     /**
@@ -709,8 +680,6 @@
       this.isResizing = false;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      
-      log('Resize ended');
     }
   };
 
@@ -739,7 +708,6 @@
         
         return await response.json();
       } catch (error) {
-        log('API error:', error);
         throw error;
       }
     },
@@ -784,8 +752,6 @@
         this._config.sessionId = Utils.generateSessionId();
       }
       
-      log('Initializing with config:', this._config);
-      
       try {
         this._createStyles();
         this._createWidget();
@@ -799,10 +765,8 @@
             this._config.welcomeMessage
           );
         }
-        
-        log('Widget initialized');
       } catch (error) {
-        log('Initialization error:', error);
+        console.error('[FloatingChatWidget] Initialization error:', error);
       }
     },
 
@@ -820,7 +784,6 @@
      */
     reply(text) {
       if (!Utils.validateMessageLength(text, this._config.maxMessageLength)) {
-        log('Message too long:', text.length);
         return;
       }
       MessageManager.addMessage(this._elements.messages, 'bot', text);
@@ -972,8 +935,6 @@
       } else {
         this._elements.widget.classList.remove('open');
       }
-      
-      log('Widget toggled:', this._isOpen);
     },
 
     /**
@@ -999,7 +960,6 @@
         if (reply) {
           MessageManager.addMessage(this._elements.messages, 'bot', reply, { streaming: true });
         } else {
-          log('API raw response:', data);
           MessageManager.addMessage(this._elements.messages, 'bot', 'Sorry, I did not understand.');
         }
         
@@ -1007,7 +967,6 @@
         // Remove loading message
         MessageManager.removeLoadingMessage(this._elements.messages);
         
-        log('API error:', error);
         MessageManager.addMessage(this._elements.messages, 'bot', 'AI agent connection error occurred.');
       }
     }
