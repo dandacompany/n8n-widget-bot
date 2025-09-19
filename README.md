@@ -17,6 +17,7 @@ A lightweight and customizable n8n AI chatbot widget library with zero dependenc
 - ✨ **Smooth Animations** - 부드러운 타이핑 애니메이션
 - 🔒 **Session Management** - 자동 세션 관리
 - 📝 **Markdown Support** - 기본 마크다운 문법 지원
+- 📎 **File Upload** - 파일 첨부 기능 지원 (이미지, PDF, 문서 등)
 
 ## Installation 📦
 
@@ -124,6 +125,16 @@ FloatingChatWidget.init({
     typingSpeed: 18,                     // 타이핑 속도 (ms)
     maxMessageLength: 1000,              // 최대 메시지 길이
     
+    // File Upload (v1.1.0+)
+    enableFileUpload: true,              // 파일 업로드 기능 활성화
+    maxFileSize: 10485760,               // 최대 파일 크기 (10MB)
+    allowedFileTypes: [                  // 허용된 파일 타입
+        'image/*',                       // 모든 이미지
+        'application/pdf',               // PDF
+        '.doc', '.docx',                 // Word 문서
+        '.txt', '.csv', '.xlsx'          // 텍스트 파일
+    ],
+    
     // Advanced
     sessionId: undefined,                // 세션 ID (자동 생성)
     fontFamily: 'inherit',               // 폰트 패밀리
@@ -146,11 +157,25 @@ n8n에서 AI 에이전트와 연동하려면:
 
 ### Expected API Format
 
-Request:
+Request (Text only):
 ```json
 {
     "message": "User message",
     "sessionId": "fcw-abc123..."
+}
+```
+
+Request (With file - v1.1.0+):
+```json
+{
+    "message": "User message",
+    "sessionId": "fcw-abc123...",
+    "file": {
+        "name": "document.pdf",
+        "type": "application/pdf",
+        "size": 12345,
+        "data": "data:application/pdf;base64,..."
+    }
 }
 ```
 

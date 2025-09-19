@@ -45,6 +45,9 @@
     maxWidth: 600, // Maximum width
     minHeight: 400, // Minimum height
     maxHeight: 800, // Maximum height
+    enableFileUpload: true, // Enable file upload feature
+    maxFileSize: 10 * 1024 * 1024, // Maximum file size in bytes (10MB)
+    allowedFileTypes: ['image/*', 'application/pdf', '.doc', '.docx', '.txt', '.csv', '.xlsx'], // Allowed file types
   };
 
 
@@ -113,6 +116,84 @@
      */
     validateMessageLength(text, maxLength) {
       return text && text.length <= maxLength;
+    },
+
+    /**
+     * Convert file to base64
+     * @param {File} file - File to convert
+     * @returns {Promise<string>} Base64 string
+     */
+    async fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    },
+
+    /**
+     * Format file size
+     * @param {number} bytes - File size in bytes
+     * @returns {string} Formatted file size
+     */
+    formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    },
+
+    /**
+     * Validate file
+     * @param {File} file - File to validate
+     * @param {Object} config - Configuration object
+     * @returns {Object} Validation result
+     */
+    validateFile(file, config) {
+      // Check file size
+      if (file.size > config.maxFileSize) {
+        return {
+          valid: false,
+          error: `File size exceeds maximum limit of ${this.formatFileSize(config.maxFileSize)}`
+        };
+      }
+
+      // Check file type
+      const fileType = file.type;
+      const fileName = file.name.toLowerCase();
+      let isAllowed = false;
+
+      for (const allowedType of config.allowedFileTypes) {
+        if (allowedType.startsWith('.')) {
+          // Check file extension
+          if (fileName.endsWith(allowedType)) {
+            isAllowed = true;
+            break;
+          }
+        } else if (allowedType.endsWith('/*')) {
+          // Check MIME type prefix
+          const prefix = allowedType.slice(0, -2);
+          if (fileType.startsWith(prefix)) {
+            isAllowed = true;
+            break;
+          }
+        } else if (fileType === allowedType) {
+          // Exact MIME type match
+          isAllowed = true;
+          break;
+        }
+      }
+
+      if (!isAllowed) {
+        return {
+          valid: false,
+          error: 'File type not allowed'
+        };
+      }
+
+      return { valid: true };
     }
   };
 
@@ -265,6 +346,32 @@
         .fcw-input:focus {
           background: #ffe0ef;
         }
+        .fcw-file-btn {
+          background: none;
+          border: none;
+          color: ${themeColor};
+          font-size: 1.3rem;
+          padding: 0 12px;
+          cursor: pointer;
+          transition: color 0.2s, background 0.2s;
+          border-radius: 50%;
+          position: relative;
+        }
+        .fcw-file-btn:hover:not(:disabled) {
+          background: #ffb3d6;
+          color: #fff;
+        }
+        .fcw-file-btn:disabled {
+          color: #ffc1e3;
+          cursor: not-allowed;
+        }
+        .fcw-file-input {
+          position: absolute;
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+        }
         .fcw-send-btn {
           background: none;
           border: none;
@@ -282,6 +389,52 @@
         .fcw-send-btn:disabled {
           color: #ffc1e3;
           cursor: not-allowed;
+        }
+        .fcw-file-preview {
+          background: #ffe0ef;
+          color: #d72660;
+          padding: 8px 12px;
+          margin: 8px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 0.9rem;
+        }
+        .fcw-file-info {
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .fcw-file-remove {
+          background: none;
+          border: none;
+          color: #d72660;
+          cursor: pointer;
+          font-size: 1.2rem;
+          padding: 0 4px;
+          transition: color 0.2s;
+        }
+        .fcw-file-remove:hover {
+          color: #ff4444;
+        }
+        .fcw-message.user.file {
+          flex-direction: column;
+          align-items: flex-end;
+        }
+        .fcw-file-message {
+          background: ${themeColor};
+          color: #fff;
+          border-radius: 16px;
+          padding: 10px 16px;
+          margin-bottom: 8px;
+          max-width: 80%;
+          font-size: 0.9rem;
+          box-shadow: 0 2px 8px rgba(255,105,180,0.13);
+        }
+        .fcw-file-icon {
+          margin-right: 8px;
         }
         .fcw-loading {
           display: inline-block;
@@ -687,30 +840,6 @@
    * API management class
    */
   const ApiManager = {
-    /**
-     * Send message to API
-     * @param {string} message - Message to send
-     * @param {string} sessionId - Session ID
-     * @param {string} apiUrl - API URL
-     * @returns {Promise} API response
-     */
-    async sendMessage(message, sessionId, apiUrl) {
-      try {
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, sessionId })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return await response.json();
-      } catch (error) {
-        throw error;
-      }
-    },
 
     /**
      * Extract reply from API response
@@ -830,11 +959,19 @@
       document.body.appendChild(bubble);
       
       // Create widget element
+      const fileButton = this._config.enableFileUpload ? 
+        `<button class="fcw-file-btn" type="button" title="Attach file">
+          <span>📎</span>
+          <input type="file" class="fcw-file-input" accept="${this._config.allowedFileTypes.join(',')}" />
+        </button>` : '';
+
       const widget = Utils.createElement('div', 'fcw-widget', `
         <div class="fcw-header">${this._config.title}</div>
         <div class="fcw-messages"></div>
+        <div class="fcw-file-preview" style="display: none;"></div>
         <form class="fcw-input-row" autocomplete="off">
           <input class="fcw-input" type="text" placeholder="${this._config.placeholder}" maxlength="${this._config.maxMessageLength}" />
+          ${fileButton}
           <button class="fcw-send-btn" type="submit">➤</button>
         </form>
       `);
@@ -849,7 +986,13 @@
         input: widget.querySelector('.fcw-input'),
         form: widget.querySelector('.fcw-input-row'),
         sendBtn: widget.querySelector('.fcw-send-btn'),
+        fileBtn: widget.querySelector('.fcw-file-btn'),
+        fileInput: widget.querySelector('.fcw-file-input'),
+        filePreview: widget.querySelector('.fcw-file-preview'),
       };
+
+      // Initialize file attachment state
+      this._attachedFile = null;
 
       // Create resize handles
       ResizeManager.createResizeHandles(widget, this._config);
@@ -875,35 +1018,140 @@
           this._handleFormSubmit();
         }
       });
+
+      // File upload events (if enabled)
+      if (this._config.enableFileUpload && this._elements.fileInput) {
+        this._elements.fileInput.addEventListener('change', (e) => {
+          this._handleFileSelect(e);
+        });
+      }
+    },
+
+    /**
+     * Handle file selection (private)
+     * @param {Event} e - File input change event
+     */
+    _handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Validate file
+      const validation = Utils.validateFile(file, this._config);
+      if (!validation.valid) {
+        this._showError(validation.error);
+        e.target.value = ''; // Clear file input
+        return;
+      }
+
+      // Store file and show preview
+      this._attachedFile = file;
+      this._showFilePreview(file);
+    },
+
+    /**
+     * Show file preview (private)
+     * @param {File} file - File to preview
+     */
+    _showFilePreview(file) {
+      const preview = this._elements.filePreview;
+      preview.innerHTML = `
+        <div class="fcw-file-info">
+          <span class="fcw-file-icon">📄</span>
+          <span>${file.name} (${Utils.formatFileSize(file.size)})</span>
+        </div>
+        <button class="fcw-file-remove" type="button">✕</button>
+      `;
+      preview.style.display = 'flex';
+
+      // Add remove button event
+      const removeBtn = preview.querySelector('.fcw-file-remove');
+      removeBtn.addEventListener('click', () => {
+        this._removeAttachedFile();
+      });
+    },
+
+    /**
+     * Remove attached file (private)
+     */
+    _removeAttachedFile() {
+      this._attachedFile = null;
+      this._elements.filePreview.style.display = 'none';
+      if (this._elements.fileInput) {
+        this._elements.fileInput.value = '';
+      }
     },
 
     /**
      * Handle form submit (private)
      */
-    _handleFormSubmit() {
+    async _handleFormSubmit() {
       const text = this._elements.input.value.trim();
+      const hasFile = this._attachedFile !== null;
       
-      if (!text) return;
+      if (!text && !hasFile) return;
       
       // Validate message length
-      if (!Utils.validateMessageLength(text, this._config.maxMessageLength)) {
+      if (text && !Utils.validateMessageLength(text, this._config.maxMessageLength)) {
         this._showError('Message is too long.');
         return;
       }
       
-      // Add user message
-      MessageManager.addMessage(this._elements.messages, 'user', text);
+      // Prepare message data
+      let messageData = {
+        text: text || '',
+        hasAttachment: hasFile
+      };
+
+      // Handle file attachment
+      if (hasFile) {
+        try {
+          const base64 = await Utils.fileToBase64(this._attachedFile);
+          messageData.file = {
+            name: this._attachedFile.name,
+            type: this._attachedFile.type,
+            size: this._attachedFile.size,
+            data: base64
+          };
+
+          // Show file message in chat
+          this._addFileMessage('user', this._attachedFile.name, Utils.formatFileSize(this._attachedFile.size));
+        } catch (error) {
+          this._showError('Failed to process file');
+          return;
+        }
+      }
+
+      // Add user message if there's text
+      if (text) {
+        MessageManager.addMessage(this._elements.messages, 'user', text);
+      }
       
-      // Clear input field
+      // Clear input and file
       this._elements.input.value = '';
       this._elements.input.focus();
+      this._removeAttachedFile();
       
       // Handle request
       if (typeof this._onUserRequest === 'function') {
-        this._onUserRequest(text);
+        this._onUserRequest(messageData);
       } else {
-        this._sendToApi(text);
+        this._sendToApi(messageData);
       }
+    },
+
+    /**
+     * Add file message to chat (private)
+     * @param {string} sender - Sender type ('user' or 'bot')
+     * @param {string} fileName - Name of the file
+     * @param {string} fileSize - Size of the file
+     */
+    _addFileMessage(sender, fileName, fileSize) {
+      const messageElement = Utils.createElement('div', `fcw-message ${sender} file`);
+      const fileMessage = Utils.createElement('div', 'fcw-file-message', 
+        `<span class="fcw-file-icon">📎</span> ${fileName} (${fileSize})`);
+      messageElement.appendChild(fileMessage);
+      this._elements.messages.appendChild(messageElement);
+      MessageManager.scrollToBottom(this._elements.messages);
     },
 
     /**
@@ -939,18 +1187,33 @@
 
     /**
      * Send message to API (private)
-     * @param {string} text - Text to send
+     * @param {Object|string} messageData - Message data or text to send
      */
-    async _sendToApi(text) {
+    async _sendToApi(messageData) {
+      // Handle both old text format and new messageData format
+      const isTextOnly = typeof messageData === 'string';
+      const payload = isTextOnly ? 
+        { message: messageData, sessionId: this._config.sessionId } :
+        { 
+          message: messageData.text,
+          sessionId: this._config.sessionId,
+          file: messageData.file || null
+        };
       // Show loading message
       MessageManager.addMessage(this._elements.messages, 'bot', '', { loading: true });
       
       try {
-        const data = await ApiManager.sendMessage(
-          text, 
-          this._config.sessionId, 
-          this._config.apiUrl
-        );
+        const response = await fetch(this._config.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
         
         // Remove loading message
         MessageManager.removeLoadingMessage(this._elements.messages);
