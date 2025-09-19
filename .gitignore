@@ -49,3 +49,10 @@ Desktop.ini
 CLAUDE.md
 examples/home.html
 ref/
+
+# Test files
+test.html
+test-widget.spec.js
+playwright.config.js
+playwright-report/
+test-results/

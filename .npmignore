@@ -1,0 +1,68 @@
+# Source control
+.git/
+.github/
+.gitignore
+
+# Development files
+CLAUDE.md
+examples/
+ref/
+
+# Test files
+test.html
+test-widget.spec.js
+playwright.config.js
+playwright-report/
+test-results/
+.playwright-mcp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.claude
+.history
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+draft.md
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Build source (keep only dist)
+webpack.config.js
+rollup.config.js
+tsconfig.json
+.babelrc
+.eslintrc*
+
+# Documentation source
+docs/
+
+# CI/CD
+.travis.yml
+.circleci/
+.gitlab-ci.yml
+
+# Package manager files (except package.json)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
