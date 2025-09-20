@@ -125,7 +125,7 @@ FloatingChatWidget.init({
     typingSpeed: 18,                     // 타이핑 속도 (ms)
     maxMessageLength: 1000,              // 최대 메시지 길이
     
-    // File Upload (v1.1.0+)
+    // File Upload (v1.2.0+ supports multiple files)
     enableFileUpload: true,              // 파일 업로드 기능 활성화
     maxFileSize: 10485760,               // 최대 파일 크기 (10MB)
     allowedFileTypes: [                  // 허용된 파일 타입
@@ -155,27 +155,32 @@ n8n에서 AI 에이전트와 연동하려면:
 3. **AI Agent** 노드 추가 및 연결
 4. Webhook URL을 복사하여 `apiUrl`에 설정
 
-### Expected API Format
+### Expected API Format (v1.2.0+)
 
-Request (Text only):
+Request (New n8n webhook format - supports multiple files):
 ```json
 {
-    "message": "User message",
-    "sessionId": "fcw-abc123..."
-}
-```
-
-Request (With file - v1.1.0+):
-```json
-{
-    "message": "User message",
     "sessionId": "fcw-abc123...",
-    "file": {
-        "name": "document.pdf",
-        "type": "application/pdf",
-        "size": 12345,
-        "data": "data:application/pdf;base64,..."
-    }
+    "action": "sendMessage",
+    "chatInput": "User message",
+    "files": [
+        {
+            "fileName": "document.pdf",
+            "fileSize": "12345 bytes",
+            "fileExtension": "pdf",
+            "fileType": "application",
+            "mimeType": "application/pdf",
+            "data": "data:application/pdf;base64,..."
+        },
+        {
+            "fileName": "image.png",
+            "fileSize": "54321 bytes",
+            "fileExtension": "png",
+            "fileType": "image",
+            "mimeType": "image/png",
+            "data": "data:image/png;base64,..."
+        }
+    ]
 }
 ```
 

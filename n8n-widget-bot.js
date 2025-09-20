@@ -395,16 +395,36 @@
         .fcw-file-preview {
           background: #ffe0ef;
           color: #d72660;
-          padding: 8px 12px;
+          padding: 8px;
           margin: 8px;
           border-radius: 8px;
+          font-size: 0.9rem;
+          max-height: 120px;
+          overflow-y: auto;
+        }
+        .fcw-files-container {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .fcw-file-item {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          font-size: 0.9rem;
+          padding: 4px 8px;
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 6px;
+        }
+        .fcw-file-item:hover {
+          background: rgba(255, 255, 255, 0.7);
         }
         .fcw-file-info {
           flex: 1;
+          display: flex;
+          align-items: center;
+          overflow: hidden;
+        }
+        .fcw-file-info span {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -416,7 +436,9 @@
           cursor: pointer;
           font-size: 1.2rem;
           padding: 0 4px;
+          margin-left: 8px;
           transition: color 0.2s;
+          flex-shrink: 0;
         }
         .fcw-file-remove:hover {
           color: #ff4444;
@@ -962,9 +984,9 @@
       
       // Create widget element
       const fileButton = this._config.enableFileUpload ? 
-        `<button class="fcw-file-btn" type="button" title="Attach file">
+        `<button class="fcw-file-btn" type="button" title="Attach files">
           <span>📎</span>
-          <input type="file" class="fcw-file-input" accept="${this._config.allowedFileTypes.join(',')}" />
+          <input type="file" class="fcw-file-input" accept="${this._config.allowedFileTypes.join(',')}" multiple />
         </button>` : '';
 
       const widget = Utils.createElement('div', 'fcw-widget', `
@@ -993,8 +1015,8 @@
         filePreview: widget.querySelector('.fcw-file-preview'),
       };
 
-      // Initialize file attachment state
-      this._attachedFile = null;
+      // Initialize file attachments state (now supports multiple files)
+      this._attachedFiles = [];
 
       // Create resize handles
       ResizeManager.createResizeHandles(widget, this._config);
@@ -1030,67 +1052,107 @@
     },
 
     /**
-     * Handle file selection (private)
+     * Handle file selection (private) - supports multiple files
      * @param {Event} e - File input change event
      */
     _handleFileSelect(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
 
-      // Validate file
-      const validation = Utils.validateFile(file, this._config);
-      if (!validation.valid) {
-        this._showError(validation.error);
-        e.target.value = ''; // Clear file input
+      // Clear previous files
+      this._attachedFiles = [];
+      
+      // Validate and add each file
+      for (const file of files) {
+        const validation = Utils.validateFile(file, this._config);
+        if (!validation.valid) {
+          this._showError(`${file.name}: ${validation.error}`);
+          continue;
+        }
+        this._attachedFiles.push(file);
+      }
+      
+      // Clear input if no valid files
+      if (this._attachedFiles.length === 0) {
+        e.target.value = '';
         return;
       }
-
-      // Store file and show preview
-      this._attachedFile = file;
-      this._showFilePreview(file);
+      
+      // Show preview for all valid files
+      this._showFilePreview(this._attachedFiles);
     },
 
     /**
-     * Show file preview (private)
-     * @param {File} file - File to preview
+     * Show file preview (private) - supports multiple files
+     * @param {Array<File>} files - Files to preview
      */
-    _showFilePreview(file) {
+    _showFilePreview(files) {
       const preview = this._elements.filePreview;
-      preview.innerHTML = `
-        <div class="fcw-file-info">
-          <span class="fcw-file-icon">📄</span>
-          <span>${file.name} (${Utils.formatFileSize(file.size)})</span>
-        </div>
-        <button class="fcw-file-remove" type="button">✕</button>
-      `;
-      preview.style.display = 'flex';
+      
+      // Create preview HTML for all files
+      let previewHTML = '<div class="fcw-files-container">';
+      files.forEach((file, index) => {
+        previewHTML += `
+          <div class="fcw-file-item" data-index="${index}">
+            <div class="fcw-file-info">
+              <span class="fcw-file-icon">📄</span>
+              <span>${file.name} (${Utils.formatFileSize(file.size)})</span>
+            </div>
+            <button class="fcw-file-remove" data-index="${index}" type="button">✕</button>
+          </div>
+        `;
+      });
+      previewHTML += '</div>';
+      
+      preview.innerHTML = previewHTML;
+      preview.style.display = 'block';
 
-      // Add remove button event
-      const removeBtn = preview.querySelector('.fcw-file-remove');
-      removeBtn.addEventListener('click', () => {
-        this._removeAttachedFile();
+      // Bind remove events for each file
+      const removeButtons = preview.querySelectorAll('.fcw-file-remove');
+      removeButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          this._removeAttachedFile(index);
+        });
       });
     },
 
     /**
      * Remove attached file (private)
+     * @param {number} index - Index of file to remove (if not provided, removes all)
      */
-    _removeAttachedFile() {
-      this._attachedFile = null;
-      this._elements.filePreview.style.display = 'none';
-      if (this._elements.fileInput) {
-        this._elements.fileInput.value = '';
+    _removeAttachedFile(index = null) {
+      if (index !== null) {
+        // Remove specific file
+        this._attachedFiles.splice(index, 1);
+        
+        // Update preview or hide if no files left
+        if (this._attachedFiles.length > 0) {
+          this._showFilePreview(this._attachedFiles);
+        } else {
+          this._elements.filePreview.style.display = 'none';
+          if (this._elements.fileInput) {
+            this._elements.fileInput.value = '';
+          }
+        }
+      } else {
+        // Remove all files
+        this._attachedFiles = [];
+        this._elements.filePreview.style.display = 'none';
+        if (this._elements.fileInput) {
+          this._elements.fileInput.value = '';
+        }
       }
     },
 
     /**
-     * Handle form submit (private)
+     * Handle form submit (private) - supports multiple files
      */
     async _handleFormSubmit() {
       const text = this._elements.input.value.trim();
-      const hasFile = this._attachedFile !== null;
+      const hasFiles = this._attachedFiles.length > 0;
       
-      if (!text && !hasFile) return;
+      if (!text && !hasFiles) return;
       
       // Validate message length
       if (text && !Utils.validateMessageLength(text, this._config.maxMessageLength)) {
@@ -1098,27 +1160,30 @@
         return;
       }
       
-      // Prepare message data
-      let messageData = {
-        text: text || '',
-        hasAttachment: hasFile
-      };
-
-      // Handle file attachment
-      if (hasFile) {
+      // Process files with base64 encoding
+      let processedFiles = [];
+      if (hasFiles) {
         try {
-          const base64 = await Utils.fileToBase64(this._attachedFile);
-          messageData.file = {
-            name: this._attachedFile.name,
-            type: this._attachedFile.type,
-            size: this._attachedFile.size,
-            data: base64
-          };
+          for (const file of this._attachedFiles) {
+            const base64Data = await Utils.fileToBase64(file);
+            const mimeType = file.type || 'application/octet-stream';
+            const fileExtension = file.name.split('.').pop() || '';
+            const fileType = mimeType.split('/')[0] || 'application';
+            
+            processedFiles.push({
+              fileName: file.name,
+              fileSize: `${file.size} bytes`,
+              fileExtension: fileExtension,
+              fileType: fileType,
+              mimeType: mimeType,
+              data: base64Data  // Include base64 data
+            });
 
-          // Show file message in chat
-          this._addFileMessage('user', this._attachedFile.name, Utils.formatFileSize(this._attachedFile.size));
+            // Show file message in chat
+            this._addFileMessage('user', file.name, Utils.formatFileSize(file.size));
+          }
         } catch (error) {
-          this._showError('Failed to process file');
+          this._showError('Failed to process files');
           return;
         }
       }
@@ -1128,16 +1193,24 @@
         MessageManager.addMessage(this._elements.messages, 'user', text);
       }
       
-      // Clear input and file
+      // Clear input and files
       this._elements.input.value = '';
       this._elements.input.focus();
       this._removeAttachedFile();
       
+      // Prepare data in n8n webhook format
+      const webhookData = {
+        sessionId: this._config.sessionId,
+        action: 'sendMessage',
+        chatInput: text || '',
+        files: processedFiles
+      };
+      
       // Handle request
       if (typeof this._onUserRequest === 'function') {
-        this._onUserRequest(messageData);
+        this._onUserRequest(webhookData);
       } else {
-        this._sendToApi(messageData);
+        this._sendToApi(webhookData);
       }
     },
 
@@ -1189,18 +1262,12 @@
 
     /**
      * Send message to API (private)
-     * @param {Object|string} messageData - Message data or text to send
+     * @param {Object} webhookData - Data in n8n webhook format
      */
-    async _sendToApi(messageData) {
-      // Handle both old text format and new messageData format
-      const isTextOnly = typeof messageData === 'string';
-      const payload = isTextOnly ? 
-        { message: messageData, sessionId: this._config.sessionId } :
-        { 
-          message: messageData.text,
-          sessionId: this._config.sessionId,
-          file: messageData.file || null
-        };
+    async _sendToApi(webhookData) {
+      // The webhookData is already in the correct format:
+      // { sessionId, action, chatInput, files }
+      
       // Show loading message
       MessageManager.addMessage(this._elements.messages, 'bot', '', { loading: true });
       
@@ -1208,7 +1275,7 @@
         const response = await fetch(this._config.apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(webhookData)
         });
         
         if (!response.ok) {
