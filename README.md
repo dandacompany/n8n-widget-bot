@@ -336,7 +336,7 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Credits 👏
 
-Created with ❤️ by [Dante Labs](https://dante-datalab.com)
+Created with ❤️ by [Dante Labs](https://dante-labs.com)
 
 ---
 
